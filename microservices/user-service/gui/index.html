@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VYRA — Account</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #09090B;
+      --surface: #111113;
+      --border: #27272A;
+      --purple: #8B5CF6;
+      --purple-light: #A78BFA;
+      --purple-dark: #6D28D9;
+      --text: #F4F4F5;
+      --muted: #71717A;
+      --success: #10B981;
+      --error: #EF4444;
+    }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* HEADER */
+    .header {
+      background: rgba(9,9,11,0.95);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+    }
+    .logo { font-family: 'Cinzel', serif; font-size: 1.5rem; font-weight: 700; letter-spacing: 0.2em; color: var(--text); }
+    .logo span { color: var(--purple); }
+    .service-badge {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(139,92,246,0.1);
+      border: 1px solid rgba(139,92,246,0.3);
+      padding: 0.4rem 1rem;
+      border-radius: 2px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--purple-light);
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* LAYOUT */
+    .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+    .page-title {
+      margin-bottom: 2rem;
+    }
+    .page-title h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .page-title p { color: var(--muted); font-size: 0.85rem; }
+
+    /* STATUS BAR */
+    .status-bar {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: 2px;
+      font-size: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .status-bar.ok { border-color: rgba(16,185,129,0.3); color: var(--success); }
+    .status-bar.err { border-color: rgba(239,68,68,0.3); color: var(--error); }
+
+    /* GRID */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+    /* CARD */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      border-radius: 2px;
+    }
+    .card h2 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--purple-light);
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* TABS */
+    .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1.25rem; }
+    .tab {
+      flex: 1; padding: 0.6rem; font-size: 0.75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      background: transparent; border: none; color: var(--muted);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .tab.active { color: var(--purple-light); border-bottom: 2px solid var(--purple); margin-bottom: -1px; }
+    .tab:hover:not(.active) { color: var(--text); }
+
+    /* FORM */
+    .form-group { margin-bottom: 1rem; }
+    label { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.4rem; }
+    input[type="text"], input[type="email"], input[type="password"] {
+      width: 100%; padding: 0.6rem 0.75rem;
+      background: #1C1C1F; border: 1px solid var(--border);
+      color: var(--text); font-size: 0.8rem;
+      border-radius: 2px; outline: none;
+      font-family: inherit; transition: border-color 0.2s;
+    }
+    input:focus { border-color: var(--purple); }
+
+    .btn {
+      width: 100%; padding: 0.75rem;
+      background: var(--purple); color: white;
+      font-size: 0.75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      border: none; cursor: pointer; border-radius: 2px;
+      transition: all 0.2s; font-family: inherit;
+    }
+    .btn:hover { background: var(--purple-dark); }
+    .btn:active { transform: translateY(1px); }
+
+    /* PROFILE */
+    .profile-card {
+      display: none;
+      background: rgba(139,92,246,0.05);
+      border: 1px solid rgba(139,92,246,0.2);
+      padding: 1.25rem;
+      border-radius: 2px;
+      margin-top: 1rem;
+    }
+    .profile-card.visible { display: block; animation: slideIn 0.3s ease; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    .profile-avatar {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple-dark), var(--purple));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem; font-weight: 700; margin-bottom: 0.75rem;
+    }
+    .profile-name { font-size: 1rem; font-weight: 700; margin-bottom: 0.2rem; }
+    .profile-email { font-size: 0.75rem; color: var(--muted); }
+    .profile-meta { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+    .meta-row { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--muted); margin-bottom: 0.3rem; }
+    .meta-row span:last-child { color: var(--text); font-weight: 600; }
+
+    /* ISOLATION PANEL */
+    .isolation-panel {
+      background: rgba(139,92,246,0.05);
+      border: 1px solid rgba(139,92,246,0.15);
+      padding: 1.5rem;
+      border-radius: 2px;
+      margin-top: 1.5rem;
+    }
+    .isolation-panel h3 { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--purple-light); margin-bottom: 1rem; }
+    .arch-fact { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.75rem; }
+    .arch-fact-icon { font-size: 1rem; flex-shrink: 0; }
+    .arch-fact-text { font-size: 0.75rem; color: var(--muted); line-height: 1.5; }
+    .arch-fact-text strong { color: var(--text); }
+
+    /* USERS LIST */
+    .user-item {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .user-item:last-child { border-bottom: none; }
+    .user-avatar-sm {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, #6D28D9, #8B5CF6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+    }
+    .user-info-name { font-size: 0.8rem; font-weight: 600; }
+    .user-info-email { font-size: 0.7rem; color: var(--muted); }
+    .user-id-badge {
+      margin-left: auto;
+      font-size: 0.65rem; font-weight: 700;
+      background: rgba(139,92,246,0.1);
+      border: 1px solid rgba(139,92,246,0.2);
+      color: var(--purple-light);
+      padding: 0.2rem 0.5rem; border-radius: 2px;
+    }
+
+    /* ALERT */
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: 2px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .alert.err { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--error); display: block; }
+    .alert.ok { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: var(--success); display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo">VY<span>R</span>A</div>
+    <div class="service-badge">
+      <div class="dot"></div>
+      Account
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="page-title">
+      <h1>👤 My Account</h1>
+      <p>Manage your account, sign in, and view your profile</p>
+    </div>
+
+    <!-- STATUS -->
+    <div id="statusBar" class="status-bar">⏳ Loading...</div>
+
+    <div class="grid-2">
+
+      <!-- AUTH PANEL -->
+      <div class="card">
+        <h2>🔐 Authentication</h2>
+        <div class="tabs">
+          <button class="tab active" id="tabLogin" onclick="switchTab('login')">Login</button>
+          <button class="tab" id="tabReg" onclick="switchTab('register')">Register</button>
+        </div>
+
+        <div id="authAlert" class="alert"></div>
+
+        <form id="authForm" onsubmit="handleAuth(event)">
+          <div id="nameField" class="form-group" style="display:none">
+            <label>Full Name</label>
+            <input type="text" id="regName" placeholder="Your full name">
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="authEmail" value="elena@vyra.fashion" required>
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="authPassword" value="vyra2026" required>
+          </div>
+          <button type="submit" class="btn" id="authBtn">Login</button>
+        </form>
+
+        <div class="profile-card" id="profileCard">
+          <div class="profile-avatar" id="profileAvatar">E</div>
+          <div class="profile-name" id="profileName">—</div>
+          <div class="profile-email" id="profileEmail">—</div>
+          <div class="profile-meta">
+            <div class="meta-row"><span>User ID</span><span id="profileId">—</span></div>
+            <div class="meta-row"><span>Database</span><span>users.db (isolated)</span></div>
+            
+          </div>
+        </div>
+      </div>
+
+      <!-- USERS LIST -->
+      <div class="card">
+        <h2>👥 Registered Members</h2>
+        <div id="usersList">
+          <div style="color: var(--muted); font-size: 0.75rem; padding: 1rem 0;">Loading users...</div>
+        </div>
+
+        <!-- ARCHITECTURE ISOLATION FACTS -->
+        <div class="isolation-panel">
+          
+          <div class="arch-fact">
+            <span class="arch-fact-icon">🗄️</span>
+            <div class="arch-fact-text"><strong>Independent Database:</strong> This service owns <code>users.db</code> exclusively. No other service reads or writes to it.</div>
+          </div>
+          <div class="arch-fact">
+            <span class="arch-fact-icon">🔌</span>
+            <div class="arch-fact-text"><strong>Independent Port:</strong> Runs on <code>:8011</code> — can be deployed, scaled, and restarted without touching any other service.</div>
+          </div>
+          <div class="arch-fact">
+            <span class="arch-fact-icon">📦</span>
+            <div class="arch-fact-text"><strong>Single Responsibility:</strong> Auth & user profile management only. Cart, orders and products are handled by their own isolated services.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const API = "http://localhost:8011";
+    let currentTab = "login";
+
+    async function init() {
+      try {
+        const res = await fetch(`${API}/api/health`);
+        const data = await res.json();
+        const sb = document.getElementById("statusBar");
+        sb.className = "status-bar ok";
+        sb.textContent = `✅ Connected — ${data.service} running on port ${data.port} with ${data.database}`;
+        loadUsers();
+      } catch (err) {
+        const sb = document.getElementById("statusBar");
+        sb.className = "status-bar err";
+        sb.textContent = `❌ Service unavailable. Please try again.`;
+      }
+    }
+
+    async function loadUsers() {
+      // Try to fetch users 1 and 2
+      const list = document.getElementById("usersList");
+      const users = [];
+      for (let i = 1; i <= 5; i++) {
+        try {
+          const r = await fetch(`${API}/api/users/${i}`);
+          if (r.ok) users.push(await r.json());
+        } catch {}
+      }
+      if (!users.length) {
+        list.innerHTML = `<div style="color: var(--muted); font-size: 0.75rem; padding: 1rem 0;">No users found yet.</div>`;
+        return;
+      }
+      list.innerHTML = users.map(u => `
+        <div class="user-item">
+          <div class="user-avatar-sm">${u.name[0].toUpperCase()}</div>
+          <div>
+            <div class="user-info-name">${u.name}</div>
+            <div class="user-info-email">${u.email}</div>
+          </div>
+          <div class="user-id-badge">ID #${u.id}</div>
+        </div>
+      `).join("");
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.getElementById("authAlert").className = "alert";
+      document.getElementById("profileCard").className = "profile-card";
+      if (tab === "login") {
+        document.getElementById("nameField").style.display = "none";
+        document.getElementById("tabLogin").className = "tab active";
+        document.getElementById("tabReg").className = "tab";
+        document.getElementById("authBtn").textContent = "Login";
+        document.getElementById("authEmail").value = "elena@vyra.fashion";
+        document.getElementById("authPassword").value = "vyra2026";
+      } else {
+        document.getElementById("nameField").style.display = "block";
+        document.getElementById("tabReg").className = "tab active";
+        document.getElementById("tabLogin").className = "tab";
+        document.getElementById("authBtn").textContent = "Register";
+        document.getElementById("authEmail").value = "";
+        document.getElementById("authPassword").value = "";
+      }
+    }
+
+    async function handleAuth(e) {
+      e.preventDefault();
+      const alert = document.getElementById("authAlert");
+      const email = document.getElementById("authEmail").value;
+      const password = document.getElementById("authPassword").value;
+
+      let endpoint, body;
+      if (currentTab === "login") {
+        endpoint = `${API}/api/users/login`;
+        body = { email, password };
+      } else {
+        endpoint = `${API}/api/users/register`;
+        body = { name: document.getElementById("regName").value, email, password };
+      }
+
+      try {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert.className = "alert err";
+          alert.textContent = data.detail || "Authentication failed";
+          return;
+        }
+        alert.className = "alert";
+        const user = data.user;
+        document.getElementById("profileAvatar").textContent = user.name[0].toUpperCase();
+        document.getElementById("profileName").textContent = user.name;
+        document.getElementById("profileEmail").textContent = user.email;
+        document.getElementById("profileId").textContent = "#" + user.id;
+        document.getElementById("profileCard").className = "profile-card visible";
+        if (currentTab === "register") loadUsers();
+      } catch (err) {
+        alert.className = "alert err";
+        alert.textContent = "Connection error — service unavailable";
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

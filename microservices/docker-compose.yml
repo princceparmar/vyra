@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  user-service:
+    build: ./user-service
+    ports:
+      - "8011:8011"
+    volumes:
+      - ./user-service/database:/app/database
+
+  product-service:
+    build: ./product-service
+    ports:
+      - "8012:8012"
+    volumes:
+      - ./product-service/database:/app/database
+
+  cart-service:
+    build: ./cart-service
+    ports:
+      - "8013:8013"
+    volumes:
+      - ./cart-service/database:/app/database
+
+  order-service:
+    build: ./order-service
+    ports:
+      - "8014:8014"
+    volumes:
+      - ./order-service/database:/app/database
+
+  payment-service:
+    build: ./payment-service
+    ports:
+      - "8015:8015"
+    volumes:
+      - ./payment-service/database:/app/database
+
+  gateway:
+    build: ./gateway
+    ports:
+      - "8000:8000"

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VYRA — Catalogue</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #09090B; --surface: #111113; --border: #27272A;
+      --green: #10B981; --green-light: #34D399; --green-dark: #059669;
+      --text: #F4F4F5; --muted: #71717A;
+      --error: #EF4444; --amber: #F59E0B;
+    }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .header {
+      background: rgba(9,9,11,0.95); border-bottom: 1px solid var(--border);
+      padding: 0 2rem; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px);
+    }
+    .logo { font-family: 'Cinzel', serif; font-size: 1.5rem; font-weight: 700; letter-spacing: 0.2em; }
+    .logo span { color: var(--green); }
+    .service-badge {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3);
+      padding: 0.4rem 1rem; font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--green-light);
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .topbar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    }
+    .page-heading { font-size: 1.1rem; font-weight: 700; flex: 0 0 auto; }
+    .page-heading span { color: var(--muted); font-size: 0.75rem; font-weight: 400; margin-left: 0.5rem; }
+
+    .search-wrap { flex: 1; min-width: 200px; position: relative; }
+    .search-input {
+      width: 100%; padding: 0.55rem 0.75rem 0.55rem 2.25rem;
+      background: #1C1C1F; border: 1px solid var(--border);
+      color: var(--text); font-size: 0.8rem; border-radius: 2px;
+      outline: none; font-family: inherit; transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--green); }
+    .search-icon { position: absolute; left: 0.6rem; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 0.9rem; }
+
+    select {
+      padding: 0.55rem 0.75rem; background: #1C1C1F; border: 1px solid var(--border);
+      color: var(--text); font-size: 0.75rem; border-radius: 2px;
+      outline: none; font-family: inherit; cursor: pointer;
+    }
+    select:focus { border-color: var(--green); }
+
+    #statusBar {
+      margin: 1rem 2rem 0; padding: 0.6rem 1rem;
+      border: 1px solid var(--border); background: var(--surface);
+      font-size: 0.75rem; border-radius: 2px;
+    }
+    #statusBar.ok { border-color: rgba(16,185,129,0.3); color: var(--green); }
+    #statusBar.err { border-color: rgba(239,68,68,0.3); color: var(--error); }
+
+    .stats-row {
+      display: flex; gap: 1rem; padding: 1rem 2rem; flex-wrap: wrap;
+    }
+    .stat-chip {
+      padding: 0.4rem 0.85rem; border: 1px solid var(--border);
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;
+      color: var(--muted); background: var(--surface); border-radius: 2px;
+    }
+    .stat-chip span { color: var(--text); }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.25rem; padding: 0 2rem 2rem; }
+
+    .product-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 2px; overflow: hidden; cursor: pointer;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .product-card:hover { border-color: var(--green); transform: translateY(-2px); }
+
+    .product-img { width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block; }
+    .product-img-placeholder { width: 100%; aspect-ratio: 3/4; background: #1C1C1F; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--border); }
+
+    .product-body { padding: 0.85rem; }
+    .product-brand { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--green-light); margin-bottom: 0.2rem; }
+    .product-name { font-size: 0.8rem; font-weight: 600; line-height: 1.3; margin-bottom: 0.5rem; }
+    .product-price-row { display: flex; align-items: center; gap: 0.5rem; }
+    .product-price { font-size: 0.85rem; font-weight: 700; color: var(--text); }
+    .product-orig { font-size: 0.7rem; color: var(--muted); text-decoration: line-through; }
+    .product-disc { font-size: 0.65rem; font-weight: 700; color: var(--amber); background: rgba(245,158,11,0.1); padding: 0.1rem 0.3rem; border-radius: 2px; }
+    .product-meta { display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.65rem; color: var(--muted); }
+    .stock-badge { color: var(--green-light); font-weight: 600; }
+    .stock-badge.low { color: var(--amber); }
+    .new-badge {
+      position: absolute; top: 0.5rem; left: 0.5rem;
+      background: var(--green); color: #09090B; font-size: 0.6rem;
+      font-weight: 700; padding: 0.15rem 0.4rem; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .product-card { position: relative; }
+
+    .empty-state { grid-column: 1/-1; text-align: center; padding: 4rem 2rem; color: var(--muted); font-size: 0.85rem; }
+    .loader { display: none; grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--muted); font-size: 0.8rem; }
+    .loader.visible { display: block; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="logo">VY<span>R</span>A</div>
+    <div class="service-badge"><div class="dot"></div>Catalogue</div>
+  </header>
+
+  <div class="topbar">
+    <div class="page-heading">📦 Product Catalogue<span>Isolated microservice — products.db only</span></div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="searchInput" placeholder="Search by name, brand, description..." oninput="debounceLoad()">
+    </div>
+    <select id="categoryFilter" onchange="loadProducts()">
+      <option value="All">All Categories</option>
+      <option value="Women">Women</option>
+      <option value="Men">Men</option>
+      <option value="Footwear">Footwear</option>
+      <option value="Accessories">Accessories</option>
+      <option value="New Arrivals">New Arrivals</option>
+      <option value="Seasonal Collection">Seasonal</option>
+    </select>
+    <select id="sortFilter" onchange="loadProducts()">
+      <option value="">Sort: Default</option>
+      <option value="price_asc">Price: Low → High</option>
+      <option value="price_desc">Price: High → Low</option>
+      <option value="rating">Top Rated</option>
+      <option value="discount">Best Discount</option>
+    </select>
+  </div>
+
+  <div id="statusBar">⏳ Loading...</div>
+
+  <div class="stats-row">
+    <div class="stat-chip">Total Products: <span id="statTotal">—</span></div>
+    <div class="stat-chip">Brands: <span id="statBrands">—</span></div>
+    <div class="stat-chip">In Stock: <span id="statStock">—</span></div>
+    <div class="stat-chip">Avg Price: <span id="statAvg">—</span></div>
+  </div>
+
+  <div class="grid" id="productGrid">
+    <div class="loader visible" id="loader">Loading products from products.db...</div>
+  </div>
+
+  <script>
+    const API = "http://localhost:8012";
+    let allProducts = [];
+    let debounceTimer;
+
+    function debounceLoad() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(loadProducts, 300);
+    }
+
+    async function init() {
+      try {
+        const res = await fetch(`${API}/api/health`);
+        const data = await res.json();
+        const sb = document.getElementById("statusBar");
+        sb.className = "ok";
+        sb.textContent = `✅ ${data.service} online — port ${data.port} — ${data.database}`;
+        loadProducts();
+      } catch {
+        const sb = document.getElementById("statusBar");
+        sb.className = "err";
+        sb.textContent = `❌ Cannot connect to Product Service on port 8012. Is it running?`;
+        document.getElementById("loader").textContent = "Service temporarily unavailable. Please try again.";
+      }
+    }
+
+    async function loadProducts() {
+      const search = document.getElementById("searchInput").value;
+      const cat = document.getElementById("categoryFilter").value;
+      const sort = document.getElementById("sortFilter").value;
+      document.getElementById("loader").className = "loader visible";
+
+      let url = `${API}/api/products?category=${encodeURIComponent(cat)}`;
+      if (search) url += `&search=${encodeURIComponent(search)}`;
+      if (sort) url += `&sort_by=${sort}`;
+
+      try {
+        const res = await fetch(url);
+        allProducts = await res.json();
+        renderProducts(allProducts);
+
+        // Stats
+        const brands = new Set(allProducts.map(p => p.brand)).size;
+        const inStock = allProducts.filter(p => p.stock > 0).length;
+        const avgPrice = allProducts.length ? (allProducts.reduce((a,p) => a + p.final_price, 0) / allProducts.length).toFixed(2) : 0;
+        document.getElementById("statTotal").textContent = allProducts.length;
+        document.getElementById("statBrands").textContent = brands;
+        document.getElementById("statStock").textContent = inStock;
+        document.getElementById("statAvg").textContent = `$${avgPrice}`;
+      } catch (err) {
+        document.getElementById("productGrid").innerHTML = `<div class="empty-state">Failed to load products. Check if service is running.</div>`;
+      }
+    }
+
+    function renderProducts(products) {
+      document.getElementById("loader").className = "loader";
+      const grid = document.getElementById("productGrid");
+      if (!products.length) {
+        grid.innerHTML = `<div class="empty-state">No products found matching your filters.</div>`;
+        return;
+      }
+      grid.innerHTML = products.map(p => `
+        <div class="product-card">
+          ${p.is_new ? `<div class="new-badge">NEW</div>` : ""}
+          <img src="${p.images[0]}" alt="${p.name}" class="product-img" onerror="this.outerHTML='<div class=\\'product-img-placeholder\\'>🛍️</div>'">
+          <div class="product-body">
+            <div class="product-brand">${p.brand}</div>
+            <div class="product-name">${p.name}</div>
+            <div class="product-price-row">
+              <span class="product-price">$${p.final_price}</span>
+              ${p.discount > 0 ? `<span class="product-orig">$${p.price}</span><span class="product-disc">-${p.discount}%</span>` : ""}
+            </div>
+            <div class="product-meta">
+              <span>⭐ ${p.rating}</span>
+              <span class="stock-badge ${p.stock < 10 ? 'low' : ''}">${p.stock > 0 ? `${p.stock} in stock` : 'Out of stock'}</span>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    init();
+  </script>
+</body>
+</html>

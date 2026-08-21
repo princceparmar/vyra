@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VYRA — Payments</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #09090B; --surface: #111113; --border: #27272A;
+      --rose: #F43F5E; --rose-light: #FB7185; --rose-dark: #BE123C;
+      --text: #F4F4F5; --muted: #71717A;
+      --success: #10B981; --error: #EF4444; --amber: #F59E0B;
+    }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .header {
+      background: rgba(9,9,11,0.95); border-bottom: 1px solid var(--border);
+      padding: 0 2rem; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px);
+    }
+    .logo { font-family: 'Cinzel', serif; font-size: 1.5rem; font-weight: 700; letter-spacing: 0.2em; }
+    .logo span { color: var(--rose); }
+    .service-badge {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.3);
+      padding: 0.4rem 1rem; font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--rose-light);
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--rose); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+    .page-title { margin-bottom: 1.5rem; }
+    .page-title h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .page-title p { color: var(--muted); font-size: 0.85rem; }
+
+    #statusBar {
+      padding: 0.7rem 1rem; border: 1px solid var(--border); background: var(--surface);
+      font-size: 0.75rem; border-radius: 2px; margin-bottom: 1.5rem;
+    }
+    #statusBar.ok { border-color: rgba(16,185,129,0.3); color: var(--success); }
+    #statusBar.err { border-color: rgba(239,68,68,0.3); color: var(--error); }
+
+    .layout { display: grid; grid-template-columns: 1fr 360px; gap: 1.5rem; align-items: start; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 1.5rem; border-radius: 2px;
+    }
+    .card h2 {
+      font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--rose-light);
+      margin-bottom: 1.25rem; padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* STATS */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 1rem 1.25rem; border-radius: 2px; }
+    .stat-num { font-size: 1.5rem; font-weight: 700; }
+    .stat-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-top: 0.2rem; }
+    .stat-success .stat-num { color: var(--success); }
+    .stat-fail .stat-num { color: var(--error); }
+    .stat-total .stat-num { color: var(--rose-light); }
+
+    /* Transaction row */
+    .tx-row {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 0.85rem 0; border-bottom: 1px solid var(--border);
+      animation: fadeIn 0.3s ease;
+    }
+    .tx-row:last-child { border-bottom: none; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    .tx-icon {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .tx-icon.success { background: rgba(16,185,129,0.15); }
+    .tx-icon.failed { background: rgba(239,68,68,0.15); }
+    .tx-info { flex: 1; }
+    .tx-id { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; color: var(--rose-light); }
+    .tx-meta { font-size: 0.68rem; color: var(--muted); margin-top: 0.15rem; }
+    .tx-right { text-align: right; }
+    .tx-amount { font-size: 0.9rem; font-weight: 700; }
+    .tx-status {
+      display: inline-block; margin-top: 0.25rem;
+      font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+      padding: 0.15rem 0.5rem; border-radius: 2px;
+    }
+    .tx-status.success { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: var(--success); }
+    .tx-status.failed { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--error); }
+
+    /* Form */
+    label { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.4rem; }
+    input[type="number"], select.form-select {
+      width: 100%; padding: 0.6rem 0.75rem;
+      background: #1C1C1F; border: 1px solid var(--border);
+      color: var(--text); font-size: 0.8rem; border-radius: 2px;
+      outline: none; font-family: inherit; transition: border-color 0.2s; margin-bottom: 0.75rem;
+    }
+    input:focus, select.form-select:focus { border-color: var(--rose); }
+
+    .method-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .method-btn {
+      padding: 0.6rem; text-align: center; font-size: 0.7rem; font-weight: 700;
+      border: 1px solid var(--border); background: #1C1C1F; cursor: pointer;
+      border-radius: 2px; transition: all 0.2s; color: var(--muted);
+    }
+    .method-btn.selected { border-color: var(--rose); background: rgba(244,63,94,0.1); color: var(--rose-light); }
+    .method-btn:hover:not(.selected) { border-color: var(--muted); color: var(--text); }
+
+    .simulate-toggle {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.6rem 0.75rem; border: 1px solid rgba(239,68,68,0.2);
+      background: rgba(239,68,68,0.05); cursor: pointer;
+      margin-bottom: 0.75rem; border-radius: 2px;
+    }
+    .simulate-toggle input[type="checkbox"] { accent-color: var(--error); width: 14px; height: 14px; }
+    .simulate-toggle span { font-size: 0.72rem; color: var(--error); font-weight: 600; }
+
+    .btn-rose {
+      width: 100%; padding: 0.75rem; background: var(--rose); color: white;
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+      border: none; cursor: pointer; border-radius: 2px; font-family: inherit;
+      transition: all 0.2s;
+    }
+    .btn-rose:hover { background: var(--rose-dark); }
+
+    .pay-result {
+      display: none; margin-top: 1rem; padding: 1rem;
+      border-radius: 2px; font-size: 0.75rem;
+    }
+    .pay-result.ok { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); display: block; }
+    .pay-result.err { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); display: block; }
+    .pay-result-title { font-weight: 700; margin-bottom: 0.5rem; font-size: 0.8rem; }
+    .pay-result pre { font-size: 0.65rem; color: var(--muted); white-space: pre-wrap; line-height: 1.6; }
+
+    .isolation-panel {
+      background: rgba(244,63,94,0.04); border: 1px solid rgba(244,63,94,0.15);
+      padding: 1.25rem; border-radius: 2px; margin-top: 1.25rem;
+    }
+    .isolation-panel h4 { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--rose-light); margin-bottom: 0.75rem; }
+    .fact { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.4rem; line-height: 1.5; }
+    .fact strong { color: var(--text); }
+
+    .empty-state { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.8rem; }
+    .empty-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="logo">VY<span>R</span>A</div>
+    <div class="service-badge"><div class="dot"></div>Payments</div>
+  </header>
+
+  <div class="container">
+    <div class="page-title">
+      <h1>💳 Payments</h1>
+      <p>Secure payment processing and transaction history</p>
+    </div>
+
+    <div id="statusBar">⏳ Loading...</div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card stat-success"><div class="stat-num" id="statSuccess">—</div><div class="stat-label">Successful Payments</div></div>
+      <div class="stat-card stat-fail"><div class="stat-num" id="statFail">—</div><div class="stat-label">Failed Transactions</div></div>
+      <div class="stat-card stat-total"><div class="stat-num" id="statTotal">—</div><div class="stat-label">Total Revenue</div></div>
+    </div>
+
+    <div class="layout">
+
+      <!-- HISTORY -->
+      <div class="card">
+        <h2>📄 Payment History (User #1)</h2>
+        <div id="txList"><div class="empty-state"><div class="empty-icon">💳</div>Loading transactions from payments.db...</div></div>
+      </div>
+
+      <!-- PROCESS PAYMENT -->
+      <div>
+        <div class="card">
+          <h2>🚀 Process Payment (Demo)</h2>
+          <div>
+            <label>User ID</label>
+            <input type="number" id="payUserId" value="1">
+            <label>Amount ($)</label>
+            <input type="number" id="payAmount" value="249.99" step="0.01">
+            <label>Payment Method</label>
+            <div class="method-grid">
+              <div class="method-btn selected" onclick="selectMethod(this, 'UPI')">UPI</div>
+              <div class="method-btn" onclick="selectMethod(this, 'Card')">Card</div>
+              <div class="method-btn" onclick="selectMethod(this, 'Cash on Delivery')">COD</div>
+            </div>
+            <input type="hidden" id="payMethod" value="UPI">
+            <label style="margin-bottom:0.4rem">Failure Simulation</label>
+            <label class="simulate-toggle">
+              <input type="checkbox" id="simulateFail">
+              <span>⚠️ Simulate payment failure (demo bank decline)</span>
+            </label>
+            <button class="btn-rose" onclick="processPayment()">Process Payment →</button>
+            <div id="payResult" class="pay-result">
+              <div class="pay-result-title" id="payResultTitle"></div>
+              <pre id="payResultJson"></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="isolation-panel">
+          
+          <div class="fact"></div>
+          <div class="fact"></div>
+          <div class="fact"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const API = "http://localhost:8015";
+    let selectedMethod = "UPI";
+
+    function selectMethod(el, method) {
+      document.querySelectorAll(".method-btn").forEach(b => b.className = "method-btn");
+      el.className = "method-btn selected";
+      selectedMethod = method;
+      document.getElementById("payMethod").value = method;
+    }
+
+    async function init() {
+      try {
+        const res = await fetch(`${API}/api/health`);
+        const data = await res.json();
+        const sb = document.getElementById("statusBar");
+        sb.className = "ok";
+        sb.textContent = `✅ ${data.service} online — port ${data.port} — ${data.database}`;
+        loadHistory();
+      } catch {
+        const sb = document.getElementById("statusBar");
+        sb.className = "err";
+        sb.textContent = `❌ Service unavailable. Please try again.`;
+        document.getElementById("txList").innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div>Service offline — start payment service on port 8015</div>`;
+      }
+    }
+
+    async function loadHistory() {
+      try {
+        const res = await fetch(`${API}/api/payment/history/1`);
+        const txs = await res.json();
+
+        // Stats
+        const success = txs.filter(t => t.status === "SUCCESS").length;
+        const failed = txs.filter(t => t.status === "FAILED").length;
+        const revenue = txs.filter(t => t.status === "SUCCESS").reduce((a, t) => a + t.amount, 0);
+        document.getElementById("statSuccess").textContent = success;
+        document.getElementById("statFail").textContent = failed;
+        document.getElementById("statTotal").textContent = `$${revenue.toFixed(2)}`;
+
+        const el = document.getElementById("txList");
+        if (!txs.length) {
+          el.innerHTML = `<div class="empty-state"><div class="empty-icon">💳</div>No transactions yet. Use the "Process Payment" form to record a transaction.</div>`;
+          return;
+        }
+        el.innerHTML = txs.map(tx => `
+          <div class="tx-row">
+            <div class="tx-icon ${tx.status === 'SUCCESS' ? 'success' : 'failed'}">
+              ${tx.status === 'SUCCESS' ? '✅' : '❌'}
+            </div>
+            <div class="tx-info">
+              <div class="tx-id">${tx.transaction_id}</div>
+              <div class="tx-meta">${tx.payment_method} · ${new Date(tx.created_at).toLocaleString()}${tx.failure_reason ? ` · <span style="color:var(--error)">${tx.failure_reason}</span>` : ''}</div>
+            </div>
+            <div class="tx-right">
+              <div class="tx-amount">$${tx.amount.toFixed(2)}</div>
+              <div class="tx-status ${tx.status.toLowerCase()}">${tx.status}</div>
+            </div>
+          </div>
+        `).join("");
+      } catch {
+        document.getElementById("txList").innerHTML = `<div class="empty-state">Failed to load transaction history. Check service status.</div>`;
+      }
+    }
+
+    async function processPayment() {
+      const result = document.getElementById("payResult");
+      const title = document.getElementById("payResultTitle");
+      const json = document.getElementById("payResultJson");
+
+      const body = {
+        user_id: parseInt(document.getElementById("payUserId").value),
+        amount: parseFloat(document.getElementById("payAmount").value),
+        payment_method: selectedMethod,
+        simulate_failure: document.getElementById("simulateFail").checked
+      };
+
+      try {
+        const res = await fetch(`${API}/api/payment/process`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          result.className = "pay-result ok";
+          title.textContent = `✅ Payment Successful — ${data.transaction_id}`;
+        } else {
+          result.className = "pay-result err";
+          title.textContent = `❌ Payment Failed — ${data.detail}`;
+        }
+        json.textContent = JSON.stringify(data, null, 2);
+        loadHistory();
+      } catch {
+        result.className = "pay-result err";
+        title.textContent = "❌ Connection error — service unavailable";
+        json.textContent = "";
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

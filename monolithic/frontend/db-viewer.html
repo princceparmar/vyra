@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VYRA — Live Database Viewer</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0A0A0F; --surface: #111118; --surface2: #18181F;
+      --border: #2A2A35; --text: #E4E4F0; --muted: #6B7280;
+      --green: #10B981; --amber: #F59E0B; --blue: #3B82F6;
+      --rose: #F43F5E; --purple: #8B5CF6;
+    }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* TOP BAR */
+    .topbar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 1.5rem; height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .logo { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; font-weight: 600; }
+    .logo .db { color: var(--green); }
+    .pulse-row { display: flex; align-items: center; gap: 0.6rem; font-size: 0.72rem; }
+    .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+    .refresh-badge {
+      font-size: 0.68rem; font-family: 'JetBrains Mono', monospace;
+      background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3);
+      color: var(--blue); padding: 0.25rem 0.6rem; cursor: pointer; transition: all 0.2s;
+    }
+    .refresh-badge:hover { background: rgba(59,130,246,0.2); }
+    .back-link {
+      font-size: 0.72rem; color: var(--muted); text-decoration: none;
+      border: 1px solid var(--border); padding: 0.25rem 0.75rem;
+      transition: all 0.2s;
+    }
+    .back-link:hover { color: var(--text); border-color: var(--text); }
+
+    /* LAYOUT */
+    .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+
+    /* STATS BAR */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 1rem 1.25rem; border-radius: 4px;
+    }
+    .stat-num { font-size: 2rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+    .stat-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-top: 0.2rem; }
+    .stat-users .stat-num { color: var(--blue); }
+    .stat-cart .stat-num { color: var(--amber); }
+    .stat-orders .stat-num { color: var(--purple); }
+    .stat-revenue .stat-num { color: var(--green); }
+
+    /* TAB NAV */
+    .tab-nav { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; overflow-x: auto; }
+    .tab-btn {
+      padding: 0.65rem 1.25rem; font-size: 0.72rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      background: transparent; border: none; color: var(--muted);
+      cursor: pointer; white-space: nowrap; transition: all 0.2s;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+    }
+    .tab-btn.active { color: var(--text); border-bottom-color: var(--blue); }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+    .tab-count {
+      display: inline-block; margin-left: 0.4rem;
+      font-size: 0.6rem; background: var(--surface2);
+      border: 1px solid var(--border); padding: 0.1rem 0.4rem;
+      border-radius: 2px; font-family: 'JetBrains Mono', monospace;
+    }
+    .tab-btn.active .tab-count { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); color: var(--blue); }
+
+    /* TABLE */
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+    thead { background: var(--surface2); }
+    th {
+      padding: 0.7rem 1rem; text-align: left; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.65rem;
+      color: var(--muted); white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+    }
+    td { padding: 0.65rem 1rem; border-bottom: 1px solid rgba(42,42,53,0.7); font-family: 'JetBrains Mono', monospace; font-size: 0.73rem; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* NEW ROW FLASH */
+    tr.new-row td { animation: flashNew 1.5s ease; }
+    @keyframes flashNew { 0%{background:rgba(16,185,129,0.15)} 100%{background:transparent} }
+
+    /* STATUS BADGES */
+    .badge {
+      display: inline-block; padding: 0.2rem 0.55rem; border-radius: 3px;
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase; font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .badge-success { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+    .badge-pending { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+    .badge-fail { background: rgba(244,63,94,0.15); color: var(--rose); border: 1px solid rgba(244,63,94,0.3); }
+
+    /* SEARCH */
+    .table-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+    .table-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+    .search-input {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); font-size: 0.75rem; font-family: 'JetBrains Mono', monospace;
+      padding: 0.4rem 0.75rem; outline: none; width: 220px; border-radius: 3px;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--blue); }
+
+    /* EMPTY STATE */
+    .empty-state { text-align: center; padding: 3rem; color: var(--muted); font-size: 0.8rem; }
+    .empty-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+
+    /* LAST UPDATED */
+    .last-updated {
+      text-align: right; font-size: 0.65rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--muted); margin-top: 1rem;
+    }
+    .last-updated span { color: var(--green); }
+
+    /* COUNTER ANIMATION */
+    .count-anim { transition: all 0.3s; }
+
+    /* WATERFALL LOADER */
+    .loading-bar {
+      height: 2px; background: linear-gradient(90deg, transparent, var(--blue), transparent);
+      background-size: 200% 100%; animation: shimmer 1.2s infinite;
+      position: fixed; top: 56px; left: 0; right: 0; z-index: 49;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .loading-bar.visible { opacity: 1; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* REFRESH COUNTDOWN */
+    .countdown {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem; color: var(--muted);
+    }
+    .countdown span { color: var(--blue); }
+  </style>
+</head>
+<body>
+
+  <div class="loading-bar" id="loadingBar"></div>
+
+  <div class="topbar">
+    <div class="logo">VYRA <span class="db">// live_db_viewer</span></div>
+    <div class="pulse-row">
+      <div class="pulse"></div>
+      <span style="color:var(--green);font-weight:600">LIVE</span>
+      <span class="countdown">· next refresh in <span id="countdown">3</span>s</span>
+      <button class="refresh-badge" onclick="fetchData()">⟳ Refresh Now</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.75rem">
+      <span style="font-size:0.68rem;color:var(--muted);font-family:'JetBrains Mono',monospace" id="dbPath">vyra.db</span>
+      <a href="/" class="back-link">← Back to Store</a>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card stat-users">
+        <div class="stat-num count-anim" id="statUsers">—</div>
+        <div class="stat-label">👤 Registered Users</div>
+      </div>
+      <div class="stat-card stat-cart">
+        <div class="stat-num count-anim" id="statCart">—</div>
+        <div class="stat-label">🛒 Active Cart Items</div>
+      </div>
+      <div class="stat-card stat-orders">
+        <div class="stat-num count-anim" id="statOrders">—</div>
+        <div class="stat-label">📦 Total Orders</div>
+      </div>
+      <div class="stat-card stat-revenue">
+        <div class="stat-num count-anim" id="statRevenue">—</div>
+        <div class="stat-label">💰 Total Revenue</div>
+      </div>
+    </div>
+
+    <!-- TAB NAV -->
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('orders')" id="tab-orders">Orders <span class="tab-count" id="cnt-orders">0</span></button>
+      <button class="tab-btn" onclick="switchTab('cart_items')" id="tab-cart_items">Cart <span class="tab-count" id="cnt-cart_items">0</span></button>
+      <button class="tab-btn" onclick="switchTab('order_items')" id="tab-order_items">Order Items <span class="tab-count" id="cnt-order_items">0</span></button>
+      <button class="tab-btn" onclick="switchTab('users')" id="tab-users">Users <span class="tab-count" id="cnt-users">0</span></button>
+      <button class="tab-btn" onclick="switchTab('wishlist_items')" id="tab-wishlist_items">Wishlist <span class="tab-count" id="cnt-wishlist_items">0</span></button>
+      <button class="tab-btn" onclick="switchTab('products')" id="tab-products">Products <span class="tab-count" id="cnt-products">0</span></button>
+      <button class="tab-btn" onclick="switchTab('payments')" id="tab-payments">Payments <span class="tab-count" id="cnt-payments">0</span></button>
+    </div>
+
+    <!-- TABLE AREA -->
+    <div class="table-toolbar">
+      <span class="table-title" id="tableTitle">orders</span>
+      <input class="search-input" id="searchInput" placeholder="Search rows..." oninput="renderCurrentTable()">
+    </div>
+    <div class="table-wrap">
+      <div id="tableBody"></div>
+    </div>
+
+    <div class="last-updated">Last updated: <span id="lastUpdated">—</span></div>
+  </div>
+
+  <script>
+    const API = "/api/admin/db";
+    let data = {};
+    let activeTab = "orders";
+    let prevCounts = {};
+    let countdownVal = 3;
+    let countdownInterval;
+
+    const COLS = {
+      orders: ["id","order_number","customer_name","email","city","total_amount","payment_method","payment_status","order_status","created_at"],
+      cart_items: ["id","user_id","product_name","size","color","quantity","final_price","created_at"],
+      order_items: ["id","order_number","product_name","brand","size","color","quantity","price"],
+      users: ["id","name","email","created_at"],
+      wishlist_items: ["id","user_id","product_name","brand","price","created_at"],
+      products: ["id","name","brand","category","price","discount","stock","rating"],
+      payments: ["id","transaction_id","user_id","amount","payment_method","status","created_at"],
+    };
+
+    async function fetchData() {
+      document.getElementById("loadingBar").classList.add("visible");
+      try {
+        const res = await fetch(API + "?t=" + Date.now());
+        const d = await res.json();
+        data = d;
+
+        // Stats
+        document.getElementById("statUsers").textContent = d.stats.total_users;
+        document.getElementById("statCart").textContent = d.stats.cart_items;
+        document.getElementById("statOrders").textContent = d.stats.total_orders;
+        document.getElementById("statRevenue").textContent = "$" + d.stats.total_revenue.toFixed(2);
+
+        // Tab counts
+        const tabs = ["orders","cart_items","order_items","users","wishlist_items","products","payments"];
+        tabs.forEach(t => {
+          const arr = d[t] || [];
+          const el = document.getElementById("cnt-" + t);
+          const prev = prevCounts[t] || 0;
+          if (el) {
+            el.textContent = arr.length;
+            if (arr.length > prev) {
+              el.style.color = "var(--green)";
+              setTimeout(() => { el.style.color = ""; }, 2000);
+            }
+            prevCounts[t] = arr.length;
+          }
+        });
+
+        document.getElementById("lastUpdated").textContent = new Date().toLocaleTimeString();
+        renderCurrentTable();
+      } catch (e) {
+        console.error("DB fetch error", e);
+      } finally {
+        document.getElementById("loadingBar").classList.remove("visible");
+      }
+    }
+
+    function switchTab(tab) {
+      activeTab = tab;
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById("tab-" + tab).classList.add("active");
+      document.getElementById("tableTitle").textContent = tab;
+      document.getElementById("searchInput").value = "";
+      renderCurrentTable();
+    }
+
+    function renderCurrentTable() {
+      const rows = data[activeTab] || [];
+      const cols = COLS[activeTab] || (rows.length ? Object.keys(rows[0]) : []);
+      const search = document.getElementById("searchInput").value.toLowerCase();
+      const container = document.getElementById("tableBody");
+
+      if (!rows.length) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div>No records in ${activeTab} yet</div>`;
+        return;
+      }
+
+      const filtered = search ? rows.filter(r => JSON.stringify(r).toLowerCase().includes(search)) : rows;
+
+      if (!filtered.length) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div>No rows matching "${search}"</div>`;
+        return;
+      }
+
+      let html = `<table><thead><tr>${cols.map(c => `<th>${c.replace(/_/g,' ')}</th>`).join("")}</tr></thead><tbody>`;
+      filtered.forEach((row, i) => {
+        html += `<tr>`;
+        cols.forEach(col => {
+          let val = row[col];
+          if (val === null || val === undefined) val = "—";
+          let cell = "";
+
+          if (col === "payment_status" || col === "status") {
+            const cls = val === "SUCCESS" ? "badge-success" : val === "FAILED" ? "badge-fail" : "badge-pending";
+            cell = `<span class="badge ${cls}">${val}</span>`;
+          } else if (col === "order_status") {
+            const cls = val === "Delivered" ? "badge-success" : val === "Shipped" ? "badge-pending" : "badge";
+            cell = `<span class="badge ${cls}" style="background:rgba(139,92,246,0.15);color:#A78BFA;border-color:rgba(139,92,246,0.3)">${val}</span>`;
+          } else if (col === "total_amount" || col === "price" || col === "amount" || col === "final_price") {
+            cell = `<span style="color:var(--green)">$${parseFloat(val).toFixed(2)}</span>`;
+          } else if (col === "order_number" || col === "transaction_id") {
+            cell = `<span style="color:var(--blue);font-size:0.7rem">${val}</span>`;
+          } else if (col === "discount") {
+            cell = `<span style="color:var(--amber)">${val}%</span>`;
+          } else if (col === "rating") {
+            cell = `<span style="color:var(--amber)">★ ${val}</span>`;
+          } else if (col === "created_at" && val !== "—") {
+            cell = `<span style="color:var(--muted)">${val.replace('T',' ').split('.')[0]}</span>`;
+          } else {
+            cell = String(val).length > 45 ? String(val).slice(0, 45) + "…" : String(val);
+          }
+
+          html += `<td>${cell}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+    }
+
+    function startCountdown() {
+      clearInterval(countdownInterval);
+      countdownVal = 3;
+      countdownInterval = setInterval(() => {
+        countdownVal--;
+        const el = document.getElementById("countdown");
+        if (el) el.textContent = countdownVal;
+        if (countdownVal <= 0) {
+          fetchData();
+          countdownVal = 3;
+        }
+      }, 1000);
+    }
+
+    // Init
+    fetchData();
+    startCountdown();
+  </script>
+</body>
+</html>

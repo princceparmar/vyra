@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VYRA — Orders</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #09090B; --surface: #111113; --border: #27272A;
+      --blue: #3B82F6; --blue-light: #60A5FA; --blue-dark: #1D4ED8;
+      --text: #F4F4F5; --muted: #71717A;
+      --success: #10B981; --error: #EF4444; --amber: #F59E0B;
+    }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .header {
+      background: rgba(9,9,11,0.95); border-bottom: 1px solid var(--border);
+      padding: 0 2rem; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px);
+    }
+    .logo { font-family: 'Cinzel', serif; font-size: 1.5rem; font-weight: 700; letter-spacing: 0.2em; }
+    .logo span { color: var(--blue); }
+    .service-badge {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3);
+      padding: 0.4rem 1rem; font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue-light);
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+    .page-title { margin-bottom: 1.5rem; }
+    .page-title h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .page-title p { color: var(--muted); font-size: 0.85rem; }
+
+    #statusBar {
+      padding: 0.7rem 1rem; border: 1px solid var(--border); background: var(--surface);
+      font-size: 0.75rem; border-radius: 2px; margin-bottom: 1.5rem;
+    }
+    #statusBar.ok { border-color: rgba(16,185,129,0.3); color: var(--success); }
+    #statusBar.err { border-color: rgba(239,68,68,0.3); color: var(--error); }
+
+    .layout { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: start; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 1.5rem; border-radius: 2px;
+    }
+    .card h2 {
+      font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--blue-light);
+      margin-bottom: 1.25rem; padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Order Card */
+    .order-card {
+      border: 1px solid var(--border); border-radius: 2px;
+      overflow: hidden; margin-bottom: 1rem;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+    .order-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.25rem; background: #1C1C1F;
+      cursor: pointer; border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
+    }
+    .order-head:hover { background: #222226; }
+    .order-num { font-size: 0.8rem; font-weight: 700; color: var(--blue-light); }
+    .order-date { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; }
+    .order-right { text-align: right; }
+    .order-total { font-size: 1rem; font-weight: 700; }
+    .order-status {
+      display: inline-block; margin-top: 0.3rem;
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+      padding: 0.2rem 0.6rem; border-radius: 2px;
+    }
+    .status-placed { background: rgba(59,130,246,0.15); color: var(--blue-light); border: 1px solid rgba(59,130,246,0.3); }
+    .status-shipped { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+    .status-delivered { background: rgba(16,185,129,0.15); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
+
+    .order-body { padding: 1.25rem; display: none; }
+    .order-body.open { display: block; }
+
+    /* Timeline */
+    .timeline { margin-bottom: 1.25rem; }
+    .timeline-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--muted); letter-spacing: 0.06em; margin-bottom: 0.75rem; }
+    .timeline-steps { display: flex; gap: 0; }
+    .timeline-step { flex: 1; position: relative; }
+    .timeline-step::before {
+      content: ""; position: absolute; top: 10px; left: 50%; right: -50%;
+      height: 2px; background: var(--border);
+    }
+    .timeline-step:last-child::before { display: none; }
+    .timeline-step.done::before { background: var(--success); }
+    .step-circle {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid var(--border); background: var(--surface);
+      margin: 0 auto 0.5rem; display: flex; align-items: center; justify-content: center;
+      font-size: 0.6rem; position: relative; z-index: 1;
+    }
+    .timeline-step.done .step-circle { border-color: var(--success); background: rgba(16,185,129,0.15); color: var(--success); }
+    .step-label { font-size: 0.6rem; text-align: center; color: var(--muted); }
+    .timeline-step.done .step-label { color: var(--success); }
+
+    /* Order Items */
+    .order-items-grid { display: flex; flex-direction: column; gap: 0.6rem; }
+    .order-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem; background: #1C1C1F; border-radius: 2px; }
+    .order-item img { width: 44px; height: 56px; object-fit: cover; border-radius: 1px; }
+    .order-item-info { flex: 1; }
+    .order-item-name { font-size: 0.78rem; font-weight: 600; }
+    .order-item-meta { font-size: 0.68rem; color: var(--muted); margin-top: 0.15rem; }
+    .order-item-price { font-size: 0.8rem; font-weight: 700; }
+
+    /* Order Meta */
+    .order-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1rem; font-size: 0.72rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    .meta-label { color: var(--muted); margin-bottom: 0.1rem; font-size: 0.65rem; text-transform: uppercase; }
+    .meta-val { font-weight: 600; }
+
+    /* Track form */
+    label { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.4rem; }
+    input {
+      width: 100%; padding: 0.6rem 0.75rem;
+      background: #1C1C1F; border: 1px solid var(--border);
+      color: var(--text); font-size: 0.8rem; border-radius: 2px;
+      outline: none; font-family: inherit; transition: border-color 0.2s;
+    }
+    input:focus { border-color: var(--blue); }
+    .btn-blue {
+      width: 100%; padding: 0.7rem; background: var(--blue); color: white;
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+      border: none; cursor: pointer; border-radius: 2px; font-family: inherit;
+      transition: all 0.2s; margin-top: 0.75rem;
+    }
+    .btn-blue:hover { background: var(--blue-dark); }
+
+    .track-result {
+      display: none; margin-top: 1rem; padding: 1rem;
+      background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.2);
+      border-radius: 2px;
+    }
+    .track-result.visible { display: block; }
+
+    .isolation-panel {
+      background: rgba(59,130,246,0.04); border: 1px solid rgba(59,130,246,0.15);
+      padding: 1.25rem; border-radius: 2px; margin-top: 1.25rem;
+    }
+    .isolation-panel h4 { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue-light); margin-bottom: 0.75rem; }
+    .fact { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.4rem; line-height: 1.5; }
+    .fact strong { color: var(--text); }
+
+    .empty-state { text-align: center; padding: 3rem; color: var(--muted); font-size: 0.85rem; }
+    .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+
+    .alert { padding: 0.6rem 0.85rem; border-radius: 2px; font-size: 0.75rem; font-weight: 600; margin-top: 0.75rem; display: none; }
+    .alert.ok { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: var(--success); display: block; }
+    .alert.err { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--error); display: block; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="logo">VY<span>R</span>A</div>
+    <div class="service-badge"><div class="dot"></div>Orders</div>
+  </header>
+
+  <div class="container">
+    <div class="page-title">
+      <h1>📦 Orders & Tracking</h1>
+      <p>Track your deliveries and view order history</p>
+    </div>
+
+    <div id="statusBar">⏳ Loading...</div>
+
+    <div class="layout">
+
+      <!-- ORDERS LIST -->
+      <div>
+        <div class="card">
+          <h2>📋 Order History (User #1)</h2>
+          <div id="ordersList"><div class="empty-state"><div class="empty-icon">📦</div>Loading orders from orders.db...</div></div>
+        </div>
+      </div>
+
+      <!-- SIDEBAR -->
+      <div>
+        <!-- TRACK ORDER -->
+        <div class="card">
+          <h2>🔍 Track Order</h2>
+          <div>
+            <label>Order Number</label>
+            <input type="text" id="trackInput" placeholder="VYRA-MICRO-XXXXXXXX">
+            <button class="btn-blue" onclick="trackOrder()">Track Order →</button>
+            <div id="trackAlert" class="alert"></div>
+            <div id="trackResult" class="track-result">
+              <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--blue-light); margin-bottom: 0.5rem;">Order Found</div>
+              <pre id="trackJson" style="font-size: 0.65rem; color: var(--muted); white-space: pre-wrap; line-height: 1.6;"></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ISOLATION -->
+        <div class="isolation-panel">
+          
+          <div class="fact"></div>
+          <div class="fact"></div>
+          <div class="fact"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const API = "http://localhost:8014";
+    const STATUSES = ["Order Placed", "Processing", "Shipped", "Out for Delivery", "Delivered"];
+    const STATUS_ICONS = ["📝", "⚙️", "🚚", "🛵", "✅"];
+
+    async function init() {
+      try {
+        const res = await fetch(`${API}/api/health`);
+        const data = await res.json();
+        const sb = document.getElementById("statusBar");
+        sb.className = "ok";
+        sb.textContent = `✅ ${data.service} online — port ${data.port} — ${data.database}`;
+        loadOrders();
+      } catch {
+        const sb = document.getElementById("statusBar");
+        sb.className = "err";
+        sb.textContent = `❌ Service unavailable. Please try again.`;
+        document.getElementById("ordersList").innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div>Service offline — start order service on port 8014</div>`;
+      }
+    }
+
+    function getStatusClass(status) {
+      if (status === "Delivered") return "status-delivered";
+      if (status === "Shipped" || status === "Out for Delivery") return "status-shipped";
+      return "status-placed";
+    }
+
+    function renderTimeline(currentStatus) {
+      const idx = STATUSES.indexOf(currentStatus);
+      return `<div class="timeline">
+        <div class="timeline-title">Delivery Progress</div>
+        <div class="timeline-steps">
+          ${STATUSES.map((s, i) => `
+            <div class="timeline-step ${i <= idx ? 'done' : ''}">
+              <div class="step-circle">${i <= idx ? STATUS_ICONS[i] : ''}</div>
+              <div class="step-label">${s.split(' ')[0]}</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>`;
+    }
+
+    async function loadOrders() {
+      try {
+        const res = await fetch(`${API}/api/orders/1`);
+        const orders = await res.json();
+        const el = document.getElementById("ordersList");
+        if (!orders || !orders.length) {
+          el.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div>No orders found in orders.db yet. Place an order via the monolithic or microservices gateway.</div>`;
+          return;
+        }
+        el.innerHTML = orders.map((o, i) => `
+          <div class="order-card">
+            <div class="order-head" onclick="toggleOrder('order-${i}')">
+              <div>
+                <div class="order-num">${o.order_number}</div>
+                <div class="order-date">${new Date(o.created_at).toLocaleString()} · ${o.payment_method}</div>
+              </div>
+              <div class="order-right">
+                <div class="order-total">$${o.total_amount}</div>
+                <div class="order-status ${getStatusClass(o.order_status)}">${o.order_status}</div>
+              </div>
+            </div>
+            <div class="order-body" id="order-${i}">
+              ${renderTimeline(o.order_status)}
+              <div class="order-items-grid">
+                ${o.items.map(item => `
+                  <div class="order-item">
+                    <img src="${item.image_url}" onerror="this.style.display='none'" alt="${item.product_name}">
+                    <div class="order-item-info">
+                      <div class="order-item-name">${item.product_name}</div>
+                      <div class="order-item-meta">${item.brand} · Size: ${item.size} · Qty: ${item.quantity}</div>
+                    </div>
+                    <div class="order-item-price">$${item.price}</div>
+                  </div>
+                `).join("")}
+              </div>
+              <div class="order-meta-grid">
+                <div><div class="meta-label">Customer</div><div class="meta-val">${o.customer_name}</div></div>
+                <div><div class="meta-label">Email</div><div class="meta-val">${o.email}</div></div>
+                <div><div class="meta-label">City</div><div class="meta-val">${o.city}</div></div>
+                <div><div class="meta-label">Payment Status</div><div class="meta-val">${o.payment_status}</div></div>
+                <div><div class="meta-label">Delivery Fee</div><div class="meta-val">$${o.delivery_fee}</div></div>
+                <div><div class="meta-label">Discount Saved</div><div class="meta-val">$${o.discount_amount}</div></div>
+              </div>
+            </div>
+          </div>
+        `).join("");
+      } catch {
+        document.getElementById("ordersList").innerHTML = `<div class="empty-state">Failed to load orders. Check if service is running.</div>`;
+      }
+    }
+
+    function toggleOrder(id) {
+      const el = document.getElementById(id);
+      el.className = el.className === "order-body" ? "order-body open" : "order-body";
+    }
+
+    async function trackOrder() {
+      const alert = document.getElementById("trackAlert");
+      const result = document.getElementById("trackResult");
+      const num = document.getElementById("trackInput").value.trim();
+      if (!num) { alert.className = "alert err"; alert.textContent = "Please enter an order number"; return; }
+
+      try {
+        const res = await fetch(`${API}/api/orders/track/${num}`);
+        const data = await res.json();
+        if (!res.ok) {
+          alert.className = "alert err";
+          alert.textContent = data.detail || "Order not found";
+          result.className = "track-result";
+          return;
+        }
+        alert.className = "alert";
+        document.getElementById("trackJson").textContent = JSON.stringify({
+          order_number: data.order_number,
+          order_status: data.order_status,
+          payment_status: data.payment_status,
+          total_amount: data.total_amount,
+          items_count: data.items.length,
+          city: data.city
+        }, null, 2);
+        result.className = "track-result visible";
+      } catch {
+        alert.className = "alert err";
+        alert.textContent = "Connection error — service unavailable";
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

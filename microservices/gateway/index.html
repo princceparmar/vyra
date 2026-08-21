@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VYRA — Wear Your Story</title>
+  <!-- Tailwind CSS & Google Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { dark: '#09090B', purple: '#8B5CF6', lightBg: '#FAF9F6' }
+          },
+          fontFamily: {
+            serif: ['Cinzel', 'serif'],
+            sans: ['Plus Jakarta Sans', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #FAF9F6; color: #111111; }
+    .glass-nav { background: rgba(250, 249, 246, 0.95); backdrop-filter: blur(12px); }
+    .badge-micro { background: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+  <!-- TOP ANNOUNCEMENT BAR -->
+  <div class="bg-purple-950 text-purple-200 text-xs py-2 px-6 flex justify-between items-center max-w-7xl mx-auto w-full font-medium">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+      <span>FREE DELIVERY on orders over $150 · New Arrivals Every Week</span>
+    </div>
+    <div class="hidden md:flex gap-4 text-purple-300">
+      <span>Returns &amp; Exchanges</span>
+      <span>•</span>
+      <span>Wear Your Story.</span>
+    </div>
+  </div>
+
+  <!-- NAVIGATION BAR -->
+  <header class="sticky top-0 z-40 glass-nav border-b border-zinc-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between gap-6">
+      
+      <a href="#" onclick="showSection('shop'); return false;" class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-purple-700 text-white font-bold flex items-center justify-center font-serif text-2xl">
+          V
+        </div>
+        <div>
+          <span class="font-serif text-2xl tracking-widest font-bold block leading-none">VYRA</span>
+          <span class="text-[10px] tracking-widest text-purple-700 uppercase font-semibold">Wear Your Story</span>
+        </div>
+      </a>
+
+      <!-- SEARCH BAR -->
+      <div class="flex-1 max-w-md hidden md:block">
+        <input type="text" id="searchInput" placeholder="Search silk coats, boots, blazers..." 
+               oninput="handleSearch()"
+               class="w-full bg-white border border-purple-200 rounded-none py-2 px-4 text-sm focus:outline-none focus:border-purple-700">
+      </div>
+
+      <!-- NAV ACTIONS -->
+      <div class="flex items-center gap-5">
+        <button onclick="showSection('shop')" class="text-sm font-medium hover:text-purple-700">Catalogue</button>
+
+        <button onclick="showSection('cart')" class="relative p-2 text-zinc-700 hover:text-black">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 11h14l1 12H4L5 11z"></path>
+          </svg>
+          <span id="cartBadge" class="absolute -top-1 -right-1 bg-purple-700 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
+        </button>
+
+        <button onclick="showSection('orders')" class="text-xs font-bold uppercase tracking-wider border border-purple-900 px-3 py-1.5 hover:bg-purple-900 hover:text-white">
+          Orders
+        </button>
+
+
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-8">
+
+    <!-- SHOP SECTION -->
+    <div id="sectionShop" class="space-y-8">
+      
+      <div class="relative bg-gradient-to-r from-zinc-950 via-purple-950 to-zinc-950 text-white p-8 md:p-12 shadow-xl space-y-4 border border-purple-900/50">
+        <span class="text-xs font-semibold tracking-widest uppercase text-purple-300">Autumn / Winter '26 Collection</span>
+        <h1 class="text-4xl md:text-5xl font-serif font-bold">Wear Your Story.</h1>
+        <p class="text-purple-200 text-sm max-w-2xl leading-relaxed">
+          Curated fashion for those who know what they want. Discover 26 exclusive pieces from the world's most exciting emerging designers.
+        </p>
+      </div>
+
+      <!-- CATEGORY NAV PILLS -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-zinc-200 text-sm font-medium" id="categoryPills"></div>
+
+      <!-- LAYOUT -->
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <aside class="space-y-6 lg:border-r border-zinc-200 lg:pr-6">
+          <div>
+            <h3 class="text-xs font-bold uppercase text-zinc-500 mb-3">Brands</h3>
+            <select id="filterBrand" onchange="applyFilters()" class="w-full bg-white border border-zinc-300 py-2 px-3 text-xs">
+              <option value="">All Brands</option>
+              <option value="Aurelia Studio">Aurelia Studio</option>
+              <option value="NorthThread">NorthThread</option>
+              <option value="Viora">Viora</option>
+              <option value="Ember and Loom">Ember and Loom</option>
+              <option value="Solace Street">Solace Street</option>
+              <option value="Urban Halo">Urban Halo</option>
+              <option value="ThreadTheory">ThreadTheory</option>
+              <option value="Luna Wardrobe">Luna Wardrobe</option>
+            </select>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-bold uppercase text-zinc-500 mb-3">Sort By</h3>
+            <select id="sortBy" onchange="applyFilters()" class="w-full bg-white border border-zinc-300 py-2 px-3 text-xs">
+              <option value="">Default Featured</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="rating">Customer Rating</option>
+            </select>
+          </div>
+
+          <!-- NEWSLETTER CARD -->
+          <div class="p-4 bg-purple-50 border border-purple-200 text-xs space-y-2">
+            <div class="font-bold text-purple-900">📩 Style Newsletter</div>
+            <div class="text-purple-700">Get early access to new arrivals and exclusive member discounts.</div>
+          </div>
+
+          <!-- Hidden status list for JS compatibility -->
+          <div id="serviceStatusList" class="hidden"></div>
+        </aside>
+
+        <!-- PRODUCT GRID -->
+        <div class="lg:col-span-3 space-y-4">
+          <div class="flex justify-between items-center text-xs text-zinc-500">
+            <span id="productCountText">Loading catalogue...</span>
+          </div>
+
+          <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CART SECTION -->
+    <div id="sectionCart" class="hidden space-y-8">
+      <div class="border-b border-zinc-200 pb-4 flex justify-between items-end">
+        <div>
+          <h2 class="text-3xl font-serif font-bold">Shopping Bag</h2>
+          <p class="text-sm text-zinc-500">Your selected items</p>
+        </div>
+        <button onclick="showSection('shop')" class="text-xs font-bold uppercase underline">Continue Shopping</button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 space-y-4" id="cartItemsList"></div>
+
+        <div class="bg-purple-950 text-white p-6 space-y-6 self-start shadow-md border border-purple-800">
+          <h3 class="text-xl font-serif font-bold border-b border-purple-900 pb-3">Order Summary</h3>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between text-purple-200">
+              <span>Subtotal</span>
+              <span id="summarySubtotal" class="text-white">$0.00</span>
+            </div>
+            <div class="flex justify-between text-emerald-400">
+              <span>Discount</span>
+              <span id="summaryDiscount">-$0.00</span>
+            </div>
+            <div class="border-t border-purple-900 pt-3 flex justify-between text-lg font-bold">
+              <span>Total Amount</span>
+              <span id="summaryTotal" class="text-amber-300">$0.00</span>
+            </div>
+          </div>
+
+          <button onclick="openCheckoutModal()" class="w-full py-3.5 bg-purple-600 text-white font-bold uppercase tracking-wider text-xs hover:bg-purple-500 transition">
+            Proceed to Checkout
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS SECTION -->
+    <div id="sectionOrders" class="hidden space-y-6">
+      <div class="border-b border-zinc-200 pb-4 flex justify-between items-end">
+        <div>
+          <h2 class="text-3xl font-serif font-bold">Orders &amp; Status Tracking</h2>
+          <p class="text-sm text-zinc-500">Your complete order history</p>
+        </div>
+        <button onclick="showSection('shop')" class="text-xs font-bold uppercase underline">Back to Catalogue</button>
+      </div>
+
+      <div id="ordersList" class="space-y-6"></div>
+    </div>
+
+  </main>
+
+  <!-- CHECKOUT MODAL -->
+  <div id="checkoutModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 relative shadow-2xl">
+      <button onclick="closeCheckoutModal()" class="absolute top-4 right-4 text-zinc-500 hover:text-black text-2xl font-bold">&times;</button>
+      <!-- STEP 1: Shipping -->
+      <div id="checkoutStep1">
+        <h2 class="text-2xl font-serif font-bold mb-2">Shipping Information</h2>
+        <p class="text-xs text-zinc-500 mb-6">Where should we send your order?</p>
+
+        <form id="checkoutForm" onsubmit="proceedToPayment(event)" class="space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div>
+              <label class="block font-bold uppercase text-zinc-600 mb-1">Full Name</label>
+              <input type="text" id="custName" required value="Elena Rostova" class="w-full p-2.5 border border-zinc-300 focus:border-purple-700 outline-none transition">
+            </div>
+            <div>
+              <label class="block font-bold uppercase text-zinc-600 mb-1">Email Address</label>
+              <input type="email" id="custEmail" required value="elena@vyra.fashion" class="w-full p-2.5 border border-zinc-300 focus:border-purple-700 outline-none transition">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block font-bold uppercase text-zinc-600 mb-1">Shipping Address</label>
+              <input type="text" id="custAddress" required value="742 Fashion Boulevard, Suite 400" class="w-full p-2.5 border border-zinc-300 focus:border-purple-700 outline-none transition">
+            </div>
+            <div>
+              <label class="block font-bold uppercase text-zinc-600 mb-1">City</label>
+              <input type="text" id="custCity" required value="New York" class="w-full p-2.5 border border-zinc-300 focus:border-purple-700 outline-none transition">
+            </div>
+            <div>
+              <label class="block font-bold uppercase text-zinc-600 mb-1">Zip / Postal Code</label>
+              <input type="text" id="custZip" required value="10001" class="w-full p-2.5 border border-zinc-300 focus:border-purple-700 outline-none transition">
+            </div>
+          </div>
+          <button type="submit" class="w-full py-3.5 bg-purple-900 text-white font-bold uppercase tracking-wider text-xs hover:bg-purple-800 transition">
+            Continue to Payment
+          </button>
+        </form>
+      </div>
+
+      <!-- STEP 2: Dummy Payment Gateway -->
+      <div id="checkoutStep2" class="hidden space-y-6">
+        <div class="text-center">
+          <h2 class="text-2xl font-serif font-bold mb-1">VYRA Secure Pay</h2>
+          <p class="text-xs text-zinc-500">Test Environment — Choose Payment Method</p>
+        </div>
+        
+        <div class="flex border-b border-zinc-200 text-xs font-bold uppercase tracking-wider text-zinc-500">
+           <button type="button" class="flex-1 py-2 border-b-2 border-purple-900 text-purple-900 payment-tab" onclick="selectPaymentTab('Credit Card', this)">Credit Card</button>
+           <button type="button" class="flex-1 py-2 border-b-2 border-transparent hover:text-purple-900 payment-tab" onclick="selectPaymentTab('Debit Card', this)">Debit Card</button>
+           <button type="button" class="flex-1 py-2 border-b-2 border-transparent hover:text-purple-900 payment-tab" onclick="selectPaymentTab('UPI', this)">UPI</button>
+           <button type="button" class="flex-1 py-2 border-b-2 border-transparent hover:text-purple-900 payment-tab" onclick="selectPaymentTab('Cash on Delivery', this)">COD</button>
+        </div>
+
+        <div class="bg-zinc-50 p-6 border border-zinc-200 min-h-[200px]">
+           <!-- Card Form -->
+           <div id="payFormCard" class="space-y-4 text-xs">
+             <div>
+               <label class="block font-bold uppercase text-zinc-600 mb-1">Card Number</label>
+               <div class="relative">
+                 <input type="text" id="cardNumber" placeholder="0000 0000 0000 0000" class="w-full p-2.5 border border-zinc-300 font-mono text-sm focus:border-purple-700 outline-none transition pl-10">
+                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-lg">💳</span>
+               </div>
+             </div>
+             <div class="grid grid-cols-2 gap-4">
+               <div>
+                 <label class="block font-bold uppercase text-zinc-600 mb-1">Expiry Date</label>
+                 <input type="text" placeholder="MM/YY" class="w-full p-2.5 border border-zinc-300 font-mono text-sm focus:border-purple-700 outline-none transition">
+               </div>
+               <div>
+                 <label class="block font-bold uppercase text-zinc-600 mb-1">CVV</label>
+                 <input type="password" placeholder="123" class="w-full p-2.5 border border-zinc-300 font-mono text-sm focus:border-purple-700 outline-none transition">
+               </div>
+             </div>
+             <div class="pt-2">
+                <label class="block font-bold uppercase text-zinc-600 mb-1">Name on Card</label>
+                <input type="text" id="cardName" class="w-full p-2.5 border border-zinc-300 font-medium focus:border-purple-700 outline-none transition">
+             </div>
+           </div>
+
+           <!-- UPI Form -->
+           <div id="payFormUPI" class="hidden space-y-4 text-xs">
+             <div>
+               <label class="block font-bold uppercase text-zinc-600 mb-1">Enter UPI ID</label>
+               <input type="text" id="upiId" placeholder="username@bank" class="w-full p-2.5 border border-zinc-300 font-mono text-sm focus:border-purple-700 outline-none transition">
+             </div>
+             <div class="text-center pt-4 text-zinc-500">
+               Or open your UPI App (Simulated)
+             </div>
+             <div class="flex justify-center gap-4">
+               <button type="button" class="p-3 border border-zinc-200 hover:border-purple-700 text-2xl rounded" onclick="document.getElementById('upiId').value='simulated@phonepay'">📱</button>
+               <button type="button" class="p-3 border border-zinc-200 hover:border-purple-700 text-2xl rounded" onclick="document.getElementById('upiId').value='simulated@gpay'">💳</button>
+             </div>
+           </div>
+
+           <!-- COD Form -->
+           <div id="payFormCOD" class="hidden flex items-center justify-center h-full pt-10 text-center text-xs text-zinc-600">
+             <div class="space-y-2">
+               <div class="text-3xl">📦</div>
+               <p class="font-bold uppercase tracking-wider text-black">Pay on Delivery</p>
+               <p>You will pay when the order arrives.</p>
+             </div>
+           </div>
+        </div>
+
+        <div class="p-3 bg-amber-50 border border-amber-300 text-xs flex items-center gap-3">
+          <input type="checkbox" id="simFailure" class="w-4 h-4 text-amber-600 cursor-pointer">
+          <label for="simFailure" class="text-amber-900 font-medium cursor-pointer select-none">
+            Simulate Payment Failure (Tests error handling)
+          </label>
+        </div>
+
+        <div id="checkoutError" class="hidden p-3 bg-red-100 text-red-700 text-xs border border-red-300 font-medium text-center"></div>
+
+        <div class="space-y-3">
+          <button onclick="processDummyPayment()" id="payBtn" class="w-full py-3.5 bg-purple-900 text-white font-bold uppercase tracking-wider text-xs hover:bg-purple-800 transition flex justify-center items-center gap-2">
+            Pay Securely
+          </button>
+          <button onclick="backToStep1()" class="w-full py-2 bg-transparent text-zinc-500 font-bold uppercase tracking-wider text-xs hover:text-black transition">
+            Back to Shipping
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <script>
+    const USER_SVC = "http://localhost:8011";
+    const PRODUCT_SVC = "http://localhost:8012";
+    const CART_SVC = "http://localhost:8013";
+    const ORDER_SVC = "http://localhost:8014";
+    const PAYMENT_SVC = "http://localhost:8015";
+
+    let currentCategory = "All";
+    let productsData = [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      checkServicesHealth();
+      loadCategories();
+      loadProducts();
+      updateBadges();
+    });
+
+    async function checkServicesHealth() {
+      const svcs = [
+        { name: "User Svc", url: USER_SVC, db: "users.db" },
+        { name: "Product Svc", url: PRODUCT_SVC, db: "products.db" },
+        { name: "Cart Svc", url: CART_SVC, db: "cart.db" },
+        { name: "Order Svc", url: ORDER_SVC, db: "orders.db" },
+        { name: "Payment Svc", url: PAYMENT_SVC, db: "payments.db" }
+      ];
+
+      const container = document.getElementById("serviceStatusList");
+      let html = "";
+
+      for (let s of svcs) {
+        try {
+          const res = await fetch(`${s.url}/api/health`);
+          if (res.ok) {
+            html += `<div class="text-emerald-700">🟢 ${s.name} (${s.db}) — OK</div>`;
+          } else {
+            html += `<div class="text-red-600">🔴 ${s.name} — Error</div>`;
+          }
+        } catch(e) {
+          html += `<div class="text-red-600">🔴 ${s.name} — Offline</div>`;
+        }
+      }
+      container.innerHTML = html;
+    }
+
+    function showSection(name) {
+      document.getElementById("sectionShop").classList.add("hidden");
+      document.getElementById("sectionCart").classList.add("hidden");
+      document.getElementById("sectionOrders").classList.add("hidden");
+
+      if (name === "shop") {
+        document.getElementById("sectionShop").classList.remove("hidden");
+        loadProducts();
+      } else if (name === "cart") {
+        document.getElementById("sectionCart").classList.remove("hidden");
+        loadCart();
+      } else if (name === "orders") {
+        document.getElementById("sectionOrders").classList.remove("hidden");
+        loadOrders();
+      }
+    }
+
+    async function loadCategories() {
+      const res = await fetch(`${PRODUCT_SVC}/api/categories`);
+      const categories = await res.json();
+      const container = document.getElementById("categoryPills");
+      container.innerHTML = categories.map(cat => `
+        <button onclick="selectCategory('${cat}')" 
+                class="px-4 py-2 uppercase tracking-wider text-xs font-semibold whitespace-nowrap border transition ${currentCategory === cat ? 'bg-purple-900 text-white border-purple-900' : 'bg-white text-zinc-700 border-zinc-300 hover:border-purple-700'}">
+          ${cat}
+        </button>
+      `).join("");
+    }
+
+    function selectCategory(cat) {
+      currentCategory = cat;
+      loadCategories();
+      loadProducts();
+    }
+
+    async function loadProducts() {
+      const brand = document.getElementById("filterBrand").value;
+      const sortBy = document.getElementById("sortBy").value;
+      const search = document.getElementById("searchInput").value;
+
+      let url = `${PRODUCT_SVC}/api/products?category=${encodeURIComponent(currentCategory)}`;
+      if (brand) url += `&brand=${encodeURIComponent(brand)}`;
+      if (sortBy) url += `&sort_by=${sortBy}`;
+      if (search) url += `&search=${encodeURIComponent(search)}`;
+
+      const res = await fetch(url);
+      productsData = await res.json();
+
+      document.getElementById("productCountText").innerText = `Showing ${productsData.length} items from Product Service (:8012)`;
+      const grid = document.getElementById("productGrid");
+
+      grid.innerHTML = productsData.map(p => `
+        <div class="group bg-white border border-zinc-200 overflow-hidden flex flex-col hover:border-purple-700 transition duration-300">
+          <div class="relative aspect-[3/4] overflow-hidden bg-zinc-100">
+            <img src="${p.images[0]}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+            ${p.discount > 0 ? `<span class="absolute top-3 left-3 bg-purple-950 text-white text-[10px] font-bold px-2 py-1 uppercase">-${p.discount}%</span>` : ''}
+          </div>
+          <div class="p-4 flex-1 flex flex-col justify-between space-y-2">
+            <div>
+              <span class="text-[10px] font-bold uppercase text-purple-700 block">${p.brand}</span>
+              <h3 class="text-sm font-semibold text-zinc-900 line-clamp-1">${p.name}</h3>
+            </div>
+            <div class="flex items-baseline justify-between pt-2 border-t border-zinc-100">
+              <span class="text-sm font-bold">$${p.discount > 0 ? p.final_price : p.price}</span>
+              <span class="text-[11px] text-amber-600 font-semibold">★ ${p.rating}</span>
+            </div>
+            <button onclick="addToCart(${p.id}, '${p.name.replace(/'/g, "")}', '${p.brand}', ${p.price}, ${p.discount}, '${p.sizes[0]}', '${p.colors[0]}', '${p.images[0]}')" 
+                    class="w-full mt-2 py-2 bg-purple-900 text-white text-xs font-bold uppercase hover:bg-purple-700 transition">
+              Add To Bag
+            </button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function handleSearch() { loadProducts(); }
+    function applyFilters() { loadProducts(); }
+
+    async function addToCart(productId, name, brand, price, discount, size, color, img) {
+      await fetch(`${CART_SVC}/api/cart/add`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: 1,
+          product_id: productId,
+          product_name: name,
+          brand: brand,
+          price: price,
+          discount: discount,
+          size: size,
+          color: color,
+          quantity: 1,
+          image_url: img
+        })
+      });
+      updateBadges();
+      alert("Item added to Cart Service (:8013 / cart.db)!");
+    }
+
+    async function updateBadges() {
+      try {
+        const res = await fetch(`${CART_SVC}/api/cart/1`);
+        const data = await res.json();
+        const count = data.items ? data.items.reduce((s, i) => s + i.quantity, 0) : 0;
+        document.getElementById("cartBadge").innerText = count;
+      } catch(e) {}
+    }
+
+    async function loadCart() {
+      const res = await fetch(`${CART_SVC}/api/cart/1`);
+      const data = await res.json();
+      
+      document.getElementById("summarySubtotal").innerText = `$${data.subtotal.toFixed(2)}`;
+      document.getElementById("summaryDiscount").innerText = `-$${data.total_discount.toFixed(2)}`;
+      document.getElementById("summaryTotal").innerText = `$${data.final_total.toFixed(2)}`;
+
+      const list = document.getElementById("cartItemsList");
+      if (!data.items || data.items.length === 0) {
+        list.innerHTML = `<div class="p-8 text-center bg-white border border-zinc-200 text-zinc-400">Shopping bag is empty in Cart Service.</div>`;
+        return;
+      }
+
+      list.innerHTML = data.items.map(item => `
+        <div class="bg-white border border-zinc-200 p-4 flex gap-4 items-center">
+          <img src="${item.image_url}" class="w-20 h-24 object-cover">
+          <div class="flex-1 space-y-1">
+            <span class="text-[10px] font-bold text-purple-700 uppercase">${item.brand}</span>
+            <h4 class="text-sm font-bold">${item.product_name}</h4>
+            <div class="text-xs text-zinc-500">Size: ${item.size} | Color: ${item.color}</div>
+            <div class="text-sm font-bold">$${item.final_price}</div>
+          </div>
+          <button onclick="removeCartItem(${item.id})" class="text-red-500 font-bold text-xs">Remove</button>
+        </div>
+      `).join("");
+    }
+
+    async function removeCartItem(cartId) {
+      await fetch(`${CART_SVC}/api/cart/remove/${cartId}`, { method: "DELETE" });
+      loadCart();
+      updateBadges();
+    }
+
+    let selectedPaymentMethod = "Credit Card";
+
+    function selectPaymentTab(method, btnElement) {
+      selectedPaymentMethod = method;
+      document.querySelectorAll(".payment-tab").forEach(b => {
+        b.classList.remove("border-purple-900", "text-purple-900");
+        b.classList.add("border-transparent");
+      });
+      btnElement.classList.remove("border-transparent");
+      btnElement.classList.add("border-purple-900", "text-purple-900");
+
+      document.getElementById("payFormCard").classList.add("hidden");
+      document.getElementById("payFormUPI").classList.add("hidden");
+      document.getElementById("payFormCOD").classList.add("hidden");
+
+      if (method === "Credit Card" || method === "Debit Card") document.getElementById("payFormCard").classList.remove("hidden");
+      else if (method === "UPI") document.getElementById("payFormUPI").classList.remove("hidden");
+      else if (method === "Cash on Delivery") document.getElementById("payFormCOD").classList.remove("hidden");
+
+      document.getElementById("payBtn").innerText = method === "Cash on Delivery" ? "Confirm Order" : "Pay Securely";
+    }
+
+    function openCheckoutModal() {
+      document.getElementById("checkoutError").classList.add("hidden");
+      document.getElementById("checkoutStep1").classList.remove("hidden");
+      document.getElementById("checkoutStep2").classList.add("hidden");
+      document.getElementById("checkoutModal").classList.remove("hidden");
+      selectPaymentTab('Credit Card', document.querySelector('.payment-tab'));
+    }
+
+    function closeCheckoutModal() {
+      document.getElementById("checkoutModal").classList.add("hidden");
+    }
+
+    function proceedToPayment(event) {
+      event.preventDefault();
+      document.getElementById("cardName").value = document.getElementById("custName").value;
+      document.getElementById("checkoutStep1").classList.add("hidden");
+      document.getElementById("checkoutStep2").classList.remove("hidden");
+    }
+
+    function backToStep1() {
+      document.getElementById("checkoutStep2").classList.add("hidden");
+      document.getElementById("checkoutStep1").classList.remove("hidden");
+    }
+
+    async function processDummyPayment() {
+      const btn = document.getElementById("payBtn");
+      btn.innerHTML = `<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Processing...`;
+      btn.disabled = true;
+
+      setTimeout(() => {
+        handleCheckout();
+      }, 1500);
+    }
+
+    async function handleCheckout() {
+      const btn = document.getElementById("payBtn");
+      const errBox = document.getElementById("checkoutError");
+      errBox.classList.add("hidden");
+
+      const name = document.getElementById("custName").value;
+      const email = document.getElementById("custEmail").value;
+      const address = document.getElementById("custAddress").value;
+      const city = document.getElementById("custCity").value;
+      const zip = document.getElementById("custZip").value;
+      const paymentMethod = selectedPaymentMethod;
+      const cardNumber = document.getElementById("cardNumber").value;
+      const upiId = document.getElementById("upiId").value;
+      const simFail = document.getElementById("simFailure").checked;
+
+      try {
+        // Step 1: Get Cart Items from Cart Service (:8013)
+        const cartRes = await fetch(`${CART_SVC}/api/cart/1`);
+        const cartData = await cartRes.json();
+        if (!cartData.items || cartData.items.length === 0) {
+          alert("Cart is empty");
+          return;
+        }
+
+        // Step 2: Process Payment in Payment Service (:8015)
+        const payRes = await fetch(`${PAYMENT_SVC}/api/payment/process`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: 1,
+            amount: cartData.final_total,
+            payment_method: paymentMethod,
+            card_number: cardNumber,
+            upi_id: upiId,
+            simulate_failure: simFail
+          })
+        });
+
+        const payData = await payRes.json();
+        if (!payRes.ok) {
+          errBox.innerText = payData.detail || "Payment Failed in Payment Service (:8015)";
+          errBox.classList.remove("hidden");
+          btn.innerHTML = `Pay Securely`;
+          btn.disabled = false;
+          return;
+        }
+
+        // Step 3: Create Order in Order Service (:8014)
+        const orderItems = cartData.items.map(i => ({
+          product_id: i.product_id,
+          product_name: i.product_name,
+          brand: i.brand,
+          price: i.final_price,
+          quantity: i.quantity,
+          size: i.size,
+          color: i.color,
+          image_url: i.image_url
+        }));
+
+        const orderRes = await fetch(`${ORDER_SVC}/api/orders/create`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: 1,
+            customer_name: name,
+            email: email,
+            address: address,
+            city: city,
+            zip_code: zip,
+            subtotal: cartData.subtotal,
+            discount_amount: cartData.total_discount,
+            delivery_fee: cartData.final_total - (cartData.subtotal - cartData.total_discount),
+            total_amount: cartData.final_total,
+            payment_method: paymentMethod,
+            payment_status: payData.status,
+            items: orderItems
+          })
+        });
+
+        const orderData = await orderRes.json();
+
+        // Step 4: Clear Cart
+        await fetch(`${CART_SVC}/api/cart/remove_all/1`, { method: "DELETE" });
+
+        closeCheckoutModal();
+        alert(`Order Placed in Microservices!\nOrder Number: ${orderData.order_number}\nTotal Amount: $${orderData.total_amount}`);
+        loadCart();
+        updateBadges();
+        showSection("orders");
+
+        btn.innerHTML = `Pay Securely`;
+        btn.disabled = false;
+
+      } catch (err) {
+        errBox.innerText = "Network error. Please try again.";
+        errBox.classList.remove("hidden");
+        btn.innerHTML = `Pay Securely`;
+        btn.disabled = false;
+      }
+    }
+
+    async function loadOrders() {
+      const res = await fetch(`${ORDER_SVC}/api/orders/1`);
+      const orders = await res.json();
+      const list = document.getElementById("ordersList");
+
+      if (!orders || orders.length === 0) {
+        list.innerHTML = `<div class="p-8 text-center bg-white border border-zinc-200 text-zinc-400">No orders found in Order Service (:8014).</div>`;
+        return;
+      }
+
+      list.innerHTML = orders.map(o => `
+        <div class="bg-white border border-zinc-200 p-6 space-y-4">
+          <div class="flex justify-between items-start border-b border-zinc-100 pb-3">
+            <div>
+              <span class="text-xs font-bold uppercase text-purple-700 tracking-wider">${o.order_number}</span>
+              <div class="text-xs text-zinc-400">${new Date(o.created_at).toLocaleString()}</div>
+            </div>
+            <div class="text-right">
+              <span class="text-sm font-bold">$${o.total_amount}</span>
+              <span class="block text-[10px] uppercase font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 mt-1 border border-emerald-200">${o.order_status}</span>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            ${o.items.map(i => `
+              <div class="flex gap-3 items-center text-xs">
+                <img src="${i.image_url}" class="w-12 h-14 object-cover">
+                <div>
+                  <div class="font-bold">${i.product_name}</div>
+                  <div class="text-zinc-500">${i.brand} | Qty: ${i.quantity}</div>
+                </div>
+                <div class="ml-auto font-bold">$${i.price}</div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function openDashboardModal() { document.getElementById("dashboardModal").classList.remove("hidden"); }
+    function closeDashboardModal() { document.getElementById("dashboardModal").classList.add("hidden"); }
+  </script>
+</body>
+</html>
